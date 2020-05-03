@@ -12,9 +12,14 @@ import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+import java.util.List;
+import java.util.ArrayList;
 
-public class LSMDAO implements DAO {
+public class NewDAO implements DAO {
     private static final String SUFFIX = ".dat";
     private static final String TEMP = ".tmp";
 
@@ -28,8 +33,13 @@ public class LSMDAO implements DAO {
     //State
     private int generation = 0;
 
-
-    public LSMDAO(@NotNull final File storage, final long flushThreshold) throws IOException {
+    /**
+     * Realization of LSMDAO
+     * @param storage
+     * @param flushThreshold
+     * @throws IOException
+     */
+    public NewDAO(@NotNull final File storage, final long flushThreshold) throws IOException {
         assert flushThreshold > 0L;
         this.flushThreshold = flushThreshold;
         this.storage = storage;

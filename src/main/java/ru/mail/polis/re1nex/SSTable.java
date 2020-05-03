@@ -115,15 +115,18 @@ final class SSTable implements Table {
         throw new UnsupportedOperationException("Immutable");
     }
 
+    @Override
+    public void close() throws IOException {
+        channel.close();
+    }
 
-    /*
+    /**
     keySize(Integer)|key|timestamp(Long)|tombstone(Byte)||valueSize(Integer)|value||
     offsets
     n
      */
     static void serialize(File file, Iterator<Cell> iterator, int size) throws IOException {
         try (FileChannel fileChannel = new FileOutputStream(file).getChannel()) {
-
             ArrayList<Integer> offsets = new ArrayList<>();
             int offset = 0;
             while (iterator.hasNext()) {
@@ -169,8 +172,6 @@ final class SSTable implements Table {
         }
     }
 
-    public void close() throws IOException {
-        channel.close();
-    }
+
 }
 
