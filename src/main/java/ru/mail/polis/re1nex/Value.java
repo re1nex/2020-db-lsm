@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
-final class Value implements Comparable<Value>{
+final class Value implements Comparable<Value> {
     private final long timestamp;
     @NotNull
     private final Optional<ByteBuffer> data;
@@ -26,15 +26,15 @@ final class Value implements Comparable<Value>{
     boolean isTombstone() {
         return data.isEmpty();
     }
-    
-    ByteBuffer getData(){
+
+    ByteBuffer getData() {
         assert !isTombstone();
         return data.orElseThrow().asReadOnlyBuffer();
     }
 
     @Override
     public int compareTo(@NotNull Value o) {
-        return -Long.compare(timestamp,o.timestamp);
+        return -Long.compare(timestamp, o.timestamp);
     }
 
     long getTimestamp() {
