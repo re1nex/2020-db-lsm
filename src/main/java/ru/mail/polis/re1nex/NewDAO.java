@@ -12,19 +12,20 @@ import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.List;
-import java.util.ArrayList;
+
 
 public class NewDAO implements DAO {
     private static final String SUFFIX = ".dat";
     private static final String TEMP = ".tmp";
 
-    private File storage;
-    private long flushThreshold;
+    private final File storage;
+    private final long flushThreshold;
 
     //Data
     private MemTable memTable;
