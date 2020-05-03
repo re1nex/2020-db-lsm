@@ -31,7 +31,7 @@ public class NewDAO implements DAO {
     private final NavigableMap<Integer, Table> ssTables;
 
     //State
-    private int version = 0;
+    private int ver = 0;
 
     /**
      * Realization of LSMDAO.
@@ -44,7 +44,7 @@ public class NewDAO implements DAO {
         this.storage = storage;
         this.ssTables = new TreeMap<>();
         this.memTable = new MemTable();
-        version = -1;
+        ver = -1;
         final File[] list = storage.listFiles((dir1, name) -> name.endsWith(SUFFIX));
         assert list != null;
         Arrays.stream(list)
@@ -58,12 +58,12 @@ public class NewDAO implements DAO {
                             } catch (IOException e) {
                                 throw new UncheckedIOException(e);
                             }
-                            if (gen > version) {
-                                version = gen;
+                            if (gen > ver) {
+                                ver = gen;
                             }
                         }
                 );
-        version++;
+        ver++;
     }
 
     @NotNull
@@ -102,15 +102,15 @@ public class NewDAO implements DAO {
 
     private void flush() throws IOException {
         //Dump memTable
-        final File file = new File(storage, version + TEMP);
+        final File file = new File(storage, ver + TEMP);
         SSTable.serialize(file, memTable.iterator(ByteBuffer.allocate(0)));
-        final File dst = new File(storage, version + SUFFIX);
+        final File dst = new File(storage, ver + SUFFIX);
         Files.move(file.toPath(), dst.toPath(), StandardCopyOption.ATOMIC_MOVE);
 
         //Switch
         memTable = new MemTable();
-        ssTables.put(version, new SSTable(dst));
-        version++;
+        ssTables.put(ver, new SSTable(dst));
+        ver++;
     }
 
     @Override
