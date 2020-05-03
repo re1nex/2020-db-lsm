@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-
 public class NewDAO implements DAO {
     private static final String SUFFIX = ".dat";
     private static final String TEMP = ".tmp";
@@ -32,21 +31,20 @@ public class NewDAO implements DAO {
     private final NavigableMap<Integer, Table> ssTables;
 
     //State
-    private int generation = 0;
+    private int version = 0;
 
     /**
-     * Realization of LSMDAO
-     * @param storage
-     * @param flushThreshold
-     * @throws IOException
+     * Realization of LSMDAO.
+     * @param storage - SSTable storage directory
+     * @param flushThreshold - max size of MemTable
      */
-    public NewDAO(@NotNull final File storage, final long flushThreshold) throws IOException {
+    public NewDAO(@NotNull final File storage, final long flushThreshold) {
         assert flushThreshold > 0L;
         this.flushThreshold = flushThreshold;
         this.storage = storage;
         this.ssTables = new TreeMap<>();
         this.memTable = new MemTable();
-        generation = -1;
+        version = -1;
         final File[] list = storage.listFiles((dir1, name) -> name.endsWith(SUFFIX));
         assert list != null;
         Arrays.stream(list)
@@ -60,17 +58,17 @@ public class NewDAO implements DAO {
                             } catch (IOException e) {
                                 throw new UncheckedIOException(e);
                             }
-                            if (gen > generation) {
-                                generation = gen;
+                            if (gen > version) {
+                                version = gen;
                             }
                         }
                 );
-        generation++;
+        version++;
     }
 
     @NotNull
     @Override
-    public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
+    public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
         final List<Iterator<Cell>> iterators = new ArrayList<>(ssTables.size() + 1);
         iterators.add(memTable.iterator(from));
         ssTables.descendingMap().values().forEach(t -> {
@@ -87,7 +85,7 @@ public class NewDAO implements DAO {
     }
 
     @Override
-    public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
+    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
         if (memTable.sizeInBytes() > flushThreshold) {
             flush();
@@ -95,7 +93,7 @@ public class NewDAO implements DAO {
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) throws IOException {
+    public void remove(@NotNull final ByteBuffer key) throws IOException {
         memTable.remove(key);
         if (memTable.sizeInBytes() > flushThreshold) {
             flush();
@@ -104,15 +102,15 @@ public class NewDAO implements DAO {
 
     private void flush() throws IOException {
         //Dump memTable
-        final File file = new File(storage, generation + TEMP);
-        SSTable.serialize(file, memTable.iterator(ByteBuffer.allocate(0)), memTable.size());
-        final File dst = new File(storage, generation + SUFFIX);
+        final File file = new File(storage, version + TEMP);
+        SSTable.serialize(file, memTable.iterator(ByteBuffer.allocate(0)));
+        final File dst = new File(storage, version + SUFFIX);
         Files.move(file.toPath(), dst.toPath(), StandardCopyOption.ATOMIC_MOVE);
 
         //Switch
         memTable = new MemTable();
-        ssTables.put(generation, new SSTable(dst));
-        generation++;
+        ssTables.put(version, new SSTable(dst));
+        version++;
     }
 
     @Override

@@ -47,7 +47,7 @@ final class MemTable implements Table {
 
     @Override
     public void close() throws IOException {
-
+        map.clear();
     }
 
     int size() {
