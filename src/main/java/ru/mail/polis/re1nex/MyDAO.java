@@ -13,7 +13,7 @@ import java.util.TreeMap;
 public class MyDAO implements DAO {
 
     private final SortedMap<ByteBuffer,ByteBuffer> map = new TreeMap<>();
-    
+
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {

@@ -17,6 +17,7 @@
 package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.re1nex.LSMDAO;
 import ru.mail.polis.re1nex.MyDAO;
 
 import java.io.File;
@@ -53,6 +54,6 @@ public final class DAOFactory {
         if (!data.isDirectory()) {
             throw new IllegalArgumentException("Path is not a directory: " + data);
         }
-        return new MyDAO();
+        return new LSMDAO(data,MAX_HEAP/128);
     }
 }
