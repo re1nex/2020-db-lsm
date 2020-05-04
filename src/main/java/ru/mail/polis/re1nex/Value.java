@@ -4,32 +4,30 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
-import java.util.Optional;
 
 final class Value implements Comparable<Value> {
     private final long timestamp;
-    @NotNull
-    private final Optional<ByteBuffer> data;
+    private final ByteBuffer data;
 
     Value(final long timestamp, @Nullable final ByteBuffer data) {
         assert timestamp > 0L;
         this.timestamp = timestamp;
-        this.data = Optional.of(data);
+        this.data = data;
     }
 
     Value(final long timestamp) {
         assert timestamp > 0L;
         this.timestamp = timestamp;
-        this.data = Optional.empty();
+        this.data = null;
     }
 
     boolean isTombstone() {
-        return data.isEmpty();
+        return data == null;
     }
 
     ByteBuffer getData() {
         assert !isTombstone();
-        return data.orElseThrow().asReadOnlyBuffer();
+        return data.asReadOnlyBuffer();
     }
 
     @Override

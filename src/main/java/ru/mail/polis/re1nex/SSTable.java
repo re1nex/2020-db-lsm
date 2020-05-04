@@ -48,21 +48,19 @@ final class SSTable implements Table {
         int offset = getOffset(row);
         final ByteBuffer key = key(row);
         offset += key.remaining() + Integer.BYTES;
-        final ByteBuffer timestamp = ByteBuffer.allocate(Long.BYTES);
-        channel.read(timestamp, offset);
+        final ByteBuffer timestampBB = ByteBuffer.allocate(Long.BYTES);
+        channel.read(timestampBB, offset);
         offset += Long.BYTES;
-        final ByteBuffer tombstone = ByteBuffer.allocate(Byte.BYTES);
-        channel.read(tombstone, offset);
-        offset += Byte.BYTES;
-        if (tombstone.rewind().get() == 1) {
-            return new Cell(key, new Value(timestamp.rewind().getLong()));
+        Long timestamp = timestampBB.rewind().getLong();
+        if (timestamp<0) {
+            return new Cell(key, new Value(-timestamp));
         } else {
             final ByteBuffer valueSize = ByteBuffer.allocate(Integer.BYTES);
             channel.read(valueSize, offset);
             final ByteBuffer value = ByteBuffer.allocate(valueSize.rewind().getInt());
             offset += Integer.BYTES;
             channel.read(value, offset);
-            return new Cell(key, new Value(timestamp.rewind().getLong(), value.rewind()));
+            return new Cell(key, new Value(timestamp, value.rewind()));
         }
     }
 
@@ -136,24 +134,16 @@ final class SSTable implements Table {
                 final ByteBuffer key = buf.getKey();
                 final Value value = buf.getValue();
                 final Integer keySize = key.remaining();
-                offset += Integer.BYTES + keySize + Long.BYTES + Byte.BYTES;
+                offset += Integer.BYTES + keySize + Long.BYTES;
                 fileChannel.write(ByteBuffer.allocate(Integer.BYTES)
                         .putInt(keySize)
                         .rewind());
                 fileChannel.write(key);
-                fileChannel.write(ByteBuffer.allocate(Long.BYTES)
-                        .putLong(value.getTimestamp())
-                        .rewind());
-                Byte tombstone = 1;
                 if (value.isTombstone()) {
-                    fileChannel.write(ByteBuffer.allocate(Byte.BYTES)
-                            .put(tombstone)
+                    fileChannel.write(ByteBuffer.allocate(Long.BYTES)
+                            .putLong(-value.getTimestamp())
                             .rewind());
                 } else {
-                    tombstone = 0;
-                    fileChannel.write(ByteBuffer.allocate(Byte.BYTES)
-                            .put(tombstone)
-                            .rewind());
                     final ByteBuffer data = value.getData();
                     final Integer valueSize = data.remaining();
                     offset += Integer.BYTES + valueSize;
