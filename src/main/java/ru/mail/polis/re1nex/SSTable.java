@@ -23,7 +23,7 @@ final class SSTable implements Table {
         final ByteBuffer buf = ByteBuffer.allocate(Integer.BYTES);
         channel.read(buf,sizeFile);
         numRows = buf.rewind().getInt();
-        sizeData = sizeFile - numRows * Integer.BYTES;
+        sizeData = (long) sizeFile - numRows * Integer.BYTES;
     }
 
     private int getOffset(final int numRow) throws IOException {
