@@ -94,7 +94,7 @@ final class SSTable implements Table {
             @Override
             public Cell next() {
                 try {
-                    return cell(pos);
+                    return cell(pos++);
                 } catch (IOException e) {
                     return null;
                 }
@@ -151,8 +151,10 @@ final class SSTable implements Table {
                     fileChannel.write(ByteBuffer.allocate(Long.BYTES)
                             .putLong(value.getTimestamp())
                             .rewind());
+
                     final ByteBuffer data = value.getData();
                     final Integer valueSize = data.remaining();
+
                     offset += Integer.BYTES + valueSize;
                     fileChannel.write(ByteBuffer.allocate(Integer.BYTES)
                             .putInt(valueSize)
