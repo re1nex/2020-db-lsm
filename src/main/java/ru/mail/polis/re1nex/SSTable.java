@@ -132,9 +132,9 @@ final class SSTable implements Table {
             int offset = 0;
             while (iterator.hasNext()) {
                 offsets.add(offset);
-                final Cell cell = iterator.next();
-                final ByteBuffer key = cell.getKey();
-                final Value value = cell.getValue();
+                final Cell buf = iterator.next();
+                final ByteBuffer key = buf.getKey();
+                final Value value = buf.getValue();
                 final Integer keySize = key.remaining();
                 offset += Integer.BYTES + keySize + Long.BYTES + Byte.BYTES;
                 fileChannel.write(ByteBuffer.allocate(Integer.BYTES)
