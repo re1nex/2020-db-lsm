@@ -51,15 +51,18 @@ public class NewDAO implements DAO {
                 .filter(currentFile -> !currentFile.isDirectory())
                 .forEach(f -> {
                             final String name = f.getName();
-                            final int gen =
-                                    Integer.parseInt(name.substring(0, name.indexOf(SUFFIX)));
-                            try {
-                                ssTables.put(gen, new SSTable(f));
-                            } catch (IOException e) {
-                                throw new UncheckedIOException(e);
-                            }
-                            if (gen > version) {
-                                version = gen;
+                            final String sub = name.substring(0, name.indexOf(SUFFIX));
+                            if(!sub.matches("[A-z]+")) {
+                                final int gen =
+                                        Integer.parseInt(sub);
+                                try {
+                                    ssTables.put(gen, new SSTable(f));
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                                if (gen > version) {
+                                    version = gen;
+                                }
                             }
                         }
                 );
