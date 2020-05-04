@@ -54,7 +54,7 @@ final class SSTable implements Table {
         final ByteBuffer tombstone = ByteBuffer.allocate(Byte.BYTES);
         channel.read(tombstone, offset);
         offset += Byte.BYTES;
-        if (tombstone.get() == 1) {
+        if (tombstone.rewind().get() == 1) {
             return new Cell(key, new Value(timestamp.rewind().getLong()));
         } else {
             final ByteBuffer valueSize = ByteBuffer.allocate(Integer.BYTES);
