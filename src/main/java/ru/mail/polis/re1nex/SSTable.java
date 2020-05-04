@@ -19,11 +19,12 @@ final class SSTable implements Table {
 
     SSTable(@NotNull final File file) throws IOException {
         channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
-        final int sizeFile = (int) (channel.size() - Integer.BYTES);
+        final long sizeFile = channel.size();
+        channel.position(sizeFile - Integer.BYTES);
         final ByteBuffer buf = ByteBuffer.allocate(Integer.BYTES);
-        channel.read(buf, sizeFile);
+        channel.read(buf);
         numRows = buf.rewind().getInt();
-        sizeData = (long) sizeFile - numRows * Integer.BYTES;
+        sizeData = sizeFile - (numRows + 1) * Integer.BYTES;
     }
 
     private int getOffset(final int numRow) throws IOException {
@@ -47,19 +48,21 @@ final class SSTable implements Table {
         int offset = getOffset(row);
         final ByteBuffer key = key(row);
         offset += key.remaining() + Integer.BYTES;
-        final ByteBuffer timestampBB = ByteBuffer.allocate(Long.BYTES);
-        channel.read(timestampBB, offset);
+        final ByteBuffer timestamp = ByteBuffer.allocate(Long.BYTES);
+        channel.read(timestamp, offset);
         offset += Long.BYTES;
-        final Long timestamp = timestampBB.rewind().getLong();
-        if (timestamp < 0) {
-            return new Cell(key, new Value(-timestamp));
+        final ByteBuffer tombstone = ByteBuffer.allocate(Byte.BYTES);
+        channel.read(tombstone, offset);
+        offset += Byte.BYTES;
+        if (tombstone.get() == 1) {
+            return new Cell(key, new Value(timestamp.rewind().getLong()));
         } else {
             final ByteBuffer valueSize = ByteBuffer.allocate(Integer.BYTES);
             channel.read(valueSize, offset);
             final ByteBuffer value = ByteBuffer.allocate(valueSize.rewind().getInt());
             offset += Integer.BYTES;
             channel.read(value, offset);
-            return new Cell(key, new Value(timestamp, value.rewind()));
+            return new Cell(key, new Value(timestamp.rewind().getLong(), value.rewind()));
         }
     }
 
@@ -125,36 +128,34 @@ final class SSTable implements Table {
      */
     static void serialize(final File file, final Iterator<Cell> iterator) throws IOException {
         try (FileChannel fileChannel = new FileOutputStream(file).getChannel()) {
-
             final ArrayList<Integer> offsets = new ArrayList<>();
             int offset = 0;
-
             while (iterator.hasNext()) {
                 offsets.add(offset);
-
-                final Cell cell = iterator.next();
-                final ByteBuffer key = cell.getKey();
-                final Value value = cell.getValue();
+                final Cell buf = iterator.next();
+                final ByteBuffer key = buf.getKey();
+                final Value value = buf.getValue();
                 final Integer keySize = key.remaining();
-                offset += Integer.BYTES + keySize + Long.BYTES;
-
+                offset += Integer.BYTES + keySize + Long.BYTES + Byte.BYTES;
                 fileChannel.write(ByteBuffer.allocate(Integer.BYTES)
                         .putInt(keySize)
                         .rewind());
                 fileChannel.write(key);
-
+                fileChannel.write(ByteBuffer.allocate(Long.BYTES)
+                        .putLong(value.getTimestamp())
+                        .rewind());
+                Byte tombstone = 1;
                 if (value.isTombstone()) {
-                    fileChannel.write(ByteBuffer.allocate(Long.BYTES)
-                            .putLong(-value.getTimestamp())
+                    fileChannel.write(ByteBuffer.allocate(Byte.BYTES)
+                            .put(tombstone)
                             .rewind());
                 } else {
-                    fileChannel.write(ByteBuffer.allocate(Long.BYTES)
-                            .putLong(value.getTimestamp())
+                    tombstone = 0;
+                    fileChannel.write(ByteBuffer.allocate(Byte.BYTES)
+                            .put(tombstone)
                             .rewind());
-
                     final ByteBuffer data = value.getData();
                     final Integer valueSize = data.remaining();
-
                     offset += Integer.BYTES + valueSize;
                     fileChannel.write(ByteBuffer.allocate(Integer.BYTES)
                             .putInt(valueSize)
