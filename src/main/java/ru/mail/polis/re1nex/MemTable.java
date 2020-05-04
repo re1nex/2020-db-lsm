@@ -11,7 +11,11 @@ import java.util.TreeMap;
 final class MemTable implements Table {
 
     private final SortedMap<ByteBuffer, Value> map = new TreeMap<>();
-    private long sizeInBytes = 0L;
+    private long sizeInBytes;
+
+    MemTable() {
+        sizeInBytes = 0L;
+    }
 
     @NotNull
     @Override

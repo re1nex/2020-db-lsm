@@ -31,7 +31,7 @@ public class NewDAO implements DAO {
     private final NavigableMap<Integer, Table> ssTables;
 
     //State
-    private int version = 0;
+    private int version;
 
     /**
      * Realization of LSMDAO.
