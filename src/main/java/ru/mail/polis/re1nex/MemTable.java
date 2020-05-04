@@ -14,7 +14,7 @@ final class MemTable implements Table {
     private long sizeInBytes;
 
     MemTable() {
-        sizeInBytes = 0L;
+        sizeInBytes = 720L;
     }
 
     @NotNull
