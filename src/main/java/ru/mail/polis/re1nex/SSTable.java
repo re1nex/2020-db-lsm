@@ -19,9 +19,9 @@ final class SSTable implements Table {
 
     SSTable(@NotNull final File file) throws IOException {
         channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
-        final int sizeFile = (int) (channel.size()- Integer.BYTES);
+        final int sizeFile = (int) (channel.size() - Integer.BYTES);
         final ByteBuffer buf = ByteBuffer.allocate(Integer.BYTES);
-        channel.read(buf,sizeFile);
+        channel.read(buf, sizeFile);
         numRows = buf.rewind().getInt();
         sizeData = (long) sizeFile - numRows * Integer.BYTES;
     }
@@ -125,24 +125,32 @@ final class SSTable implements Table {
      */
     static void serialize(final File file, final Iterator<Cell> iterator) throws IOException {
         try (FileChannel fileChannel = new FileOutputStream(file).getChannel()) {
+
             final ArrayList<Integer> offsets = new ArrayList<>();
             int offset = 0;
+
             while (iterator.hasNext()) {
                 offsets.add(offset);
-                final Cell buf = iterator.next();
-                final ByteBuffer key = buf.getKey();
-                final Value value = buf.getValue();
+
+                final Cell cell = iterator.next();
+                final ByteBuffer key = cell.getKey();
+                final Value value = cell.getValue();
                 final Integer keySize = key.remaining();
                 offset += Integer.BYTES + keySize + Long.BYTES;
+
                 fileChannel.write(ByteBuffer.allocate(Integer.BYTES)
                         .putInt(keySize)
                         .rewind());
                 fileChannel.write(key);
+
                 if (value.isTombstone()) {
                     fileChannel.write(ByteBuffer.allocate(Long.BYTES)
                             .putLong(-value.getTimestamp())
                             .rewind());
                 } else {
+                    fileChannel.write(ByteBuffer.allocate(Long.BYTES)
+                            .putLong(value.getTimestamp())
+                            .rewind());
                     final ByteBuffer data = value.getData();
                     final Integer valueSize = data.remaining();
                     offset += Integer.BYTES + valueSize;
