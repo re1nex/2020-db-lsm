@@ -11,7 +11,7 @@ import java.util.TreeMap;
 final class MemTable implements Table {
 
     private final SortedMap<ByteBuffer, Value> map = new TreeMap<>();
-    private long sizeInBytes = 720L;
+    private long sizeInBytes = 0L;
 
     @NotNull
     @Override
@@ -30,19 +30,17 @@ final class MemTable implements Table {
         } else {
             sizeInBytes += value.remaining() + key.remaining() + Long.BYTES;
         }
-        map.put(key, new Value(System.currentTimeMillis(), value));
+        map.put(key.duplicate(), new Value(System.currentTimeMillis(), value.duplicate()));
     }
 
     @Override
     public void remove(@NotNull final ByteBuffer key) throws IOException {
-        if (map.containsKey(key)) {
-            if (!map.get(key).isTombstone()) {
-                sizeInBytes -= map.get(key).getData().remaining();
-            }
-        } else {
-            sizeInBytes += key.remaining() + Long.BYTES;
+        final Value previous = map.put(key.duplicate(), new Value(System.currentTimeMillis()));
+        if (previous == null) {
+            sizeInBytes += key.remaining();
+        } else if (!previous.isTombstone()) {
+            sizeInBytes -= previous.getData().remaining();
         }
-        map.put(key, new Value(System.currentTimeMillis()));
     }
 
     @Override
