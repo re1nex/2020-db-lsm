@@ -53,6 +53,6 @@ public final class DAOFactory {
         if (!data.isDirectory()) {
             throw new IllegalArgumentException("Path is not a directory: " + data);
         }
-        return new NewDAO(data, MAX_HEAP / 128);
+        return new NewDAO(data, MAX_HEAP / 50);
     }
 }
