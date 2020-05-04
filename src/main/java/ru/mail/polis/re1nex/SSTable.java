@@ -16,14 +16,14 @@ final class SSTable implements Table {
     private final FileChannel channel;
     private final int numRows;
     private final long sizeData;
-    
+
     SSTable(@NotNull final File file) throws IOException {
         channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
         final int sizeFile = (int) (channel.size()- Integer.BYTES);
         final ByteBuffer buf = ByteBuffer.allocate(Integer.BYTES);
         channel.read(buf,sizeFile);
         numRows = buf.rewind().getInt();
-        sizeData = sizeFile - (numRows) * Integer.BYTES;
+        sizeData = sizeFile - numRows * Integer.BYTES;
     }
 
     private int getOffset(final int numRow) throws IOException {
