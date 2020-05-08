@@ -12,12 +12,7 @@ import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 
 public class NewDAO implements DAO {
     private static final String SUFFIX = ".dat";
@@ -53,7 +48,7 @@ public class NewDAO implements DAO {
                 .forEach(f -> {
                             final String name = f.getName();
                             final String sub = name.substring(0, name.indexOf(SUFFIX));
-                            if (!sub.matches("[A-z]+")) {
+                            if (sub.matches("[0-9]+")) {
                                 final int gen =
                                         Integer.parseInt(sub);
                                 try {
