@@ -6,12 +6,6 @@ import java.nio.ByteBuffer;
 
 final class Cell implements Comparable<Cell> {
 
-    @Override
-    public int compareTo(@NotNull final Cell cell) {
-        final int cmp = key.compareTo(cell.getKey());
-        return cmp == 0 ? Long.compare(cell.getValue().getTimestamp(), value.getTimestamp()) : cmp;
-    }
-
     @NotNull
     private final ByteBuffer key;
     @NotNull
@@ -30,5 +24,11 @@ final class Cell implements Comparable<Cell> {
     @NotNull
     public Value getValue() {
         return value;
+    }
+
+    @Override
+    public int compareTo(@NotNull final Cell cell) {
+        final int cmp = key.compareTo(cell.getKey());
+        return cmp == 0 ? Long.compare(cell.getValue().getTimestamp(), value.getTimestamp()) : cmp;
     }
 }

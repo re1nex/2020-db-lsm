@@ -12,7 +12,13 @@ import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import static java.util.Objects.requireNonNull;
 
@@ -67,7 +73,6 @@ public class NewDAO implements DAO {
         version++;
     }
 
-
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
@@ -89,7 +94,6 @@ public class NewDAO implements DAO {
         final Iterator<Cell> merged = Iterators.mergeSorted(iters, Comparator.naturalOrder());
         return Iters.collapseEquals(merged, Cell::getKey);
     }
-
 
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
