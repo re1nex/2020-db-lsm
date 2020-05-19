@@ -3,12 +3,14 @@ package ru.mail.polis.re1nex;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
-import java.util.Comparator;
 
-final class Cell {
+final class Cell implements Comparable<Cell> {
 
-    static final Comparator<Cell> COMPARATOR =
-            Comparator.comparing(Cell::getKey).thenComparing(Cell::getValue);
+    @Override
+    public int compareTo(@NotNull final Cell cell) {
+        final int cmp = key.compareTo(cell.getKey());
+        return cmp == 0 ? Long.compare(cell.getValue().getTimestamp(), value.getTimestamp()) : cmp;
+    }
 
     @NotNull
     private final ByteBuffer key;
